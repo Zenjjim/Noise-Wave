@@ -1,12 +1,18 @@
+var capturer = new CCapture({
+  format: "webm",
+  framerate: 60,
+  verbose: true,
+})
+
 let t = 0;
 let n = 5000;
 let particles = [];
-let bc_picker;
-let style_picker;
+let bc_picker = "smoke"; // smoke / landscape
+let style_picker = "line"; // line / ellipse / point
 const opacity = 50;
 let colors = [
-  "rgba(181,243,194,0.01)",
-  "rgba(111,188,174,0.01)",
+  "rgba(181,243,194,0.1)",
+  "rgba(111,188,174,0.1)",
 ]
 let bc = "rgba(35,40,48"
 let bc_smoke = `${bc}, 0.2)`
@@ -14,15 +20,6 @@ let bc_landscape = `${bc}, 1)`
 let isDrawing = true;
 
 function setup() {
-  bc_picker = createRadio();
-  bc_picker.option("1", 'smoke');
-  bc_picker.option("2", 'landscape');
-  bc_picker.selected("2")
-  style_picker = createRadio();
-  style_picker.option("1", 'line');
-  style_picker.option("2", 'ellipse');
-  style_picker.option("3", 'point');
-  style_picker.selected("1")
   createCanvas(windowWidth, windowHeight);
   background(bc_landscape)
 
@@ -37,8 +34,11 @@ function setup() {
 }
 
 function draw() {
+  if (frameCount == 60) {
+    capturer.start();
+  }
   if(!isDrawing)return;
-  if(bc_picker.value() == 1){
+  if(bc_picker == "smoke"){
     background(bc_smoke)
   }
   particles.forEach((p) => {
@@ -48,6 +48,12 @@ function draw() {
     update(t, p.pos, p.vel, p.seed, windowWidth, windowHeight);
   });
   t += 0.002;
+  if (frameCount < 60*10) {
+    capturer.capture(canvas);
+  }else if (frameCount === 60*10) {
+    capturer.save()
+    capturer.stop()
+  }
 }
 
 function keyPressed(){
@@ -57,14 +63,12 @@ if (keyCode === ENTER){
 }
 
 function display (pos, vel) {
-  if(style_picker.value() == 1){
+  if(style_picker == "line"){
     line(pos.x, pos.y, (pos.x + vel.x), (pos.y + vel.y));
-  }else if(style_picker.value() == 2){
+  }else if(style_picker == "ellipse"){
     ellipse(pos.x, pos.y, 2);
-
-  }else if (style_picker.value() == 3){
+  }else if (style_picker == "point"){
     point(pos.x, pos.y);
-
   }
 }
 
